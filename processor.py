@@ -1,9 +1,14 @@
 import fitz  # PyMuPDF
 import re
 import spacy
+import spacy.cli
 from transformers import pipeline
 from keybert import KeyBERT
 
+# Download the spaCy model first
+spacy.cli.download("en_core_web_sm")
+
+# --- Load all models once ---
 nlp = spacy.load("en_core_web_sm")
 summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 kw_model = KeyBERT()
@@ -34,7 +39,8 @@ def summarize_article(article):
 
 def extract_keywords(article):
     try:
-        return kw_model.extract_keywords(article[:500], top_n=5, stop_words='english')
+        keywords_with_scores = kw_model.extract_keywords(article[:500], keyphrase_ngram_range=(1, 2), stop_words='english', top_n=5)
+        return [kw[0] for kw in keywords_with_scores]
     except Exception:
         return []
 
@@ -46,7 +52,7 @@ def process_pdf(file):
     for article in articles:
         score = score_article(article)
         summary = summarize_article(article)
-        keywords = [kw[0] for kw in extract_keywords(article)]
+        keywords = extract_keywords(article)
         headline = article.split('\n')[0][:100]
 
         processed.append({
@@ -56,5 +62,6 @@ def process_pdf(file):
             "score": score
         })
 
+    # Sort by score and return the top 5
     processed.sort(key=lambda x: x['score'], reverse=True)
     return processed[:5]
