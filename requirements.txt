@@ -1,6 +1,7 @@
 streamlit
 PyMuPDF
-spacy
+spacyspacy>=3.7.2
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.2/en_core_web_sm-3.7.2.tar.gz
 transformers
 keybert
 torch
